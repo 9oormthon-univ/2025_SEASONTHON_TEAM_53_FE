@@ -1,4 +1,6 @@
+import { Outlet } from 'react-router-dom';
 import styled from 'styled-components';
+import GlobalStyle from './styles/GlobalStyle';
 
 const AppBackground = styled.div`
   width: 100%;
@@ -13,45 +15,23 @@ const AppContainer = styled.div`
   width: 100%;
   max-width: 480px;
   height: 100%;
-  max-height: 896px;
-
-  background-color: white;
+  max-height: 850px;
+  background-color: #555555;
+  border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-
   overflow-y: auto;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  background-color: #282c34;
-`;
-
-const Title = styled.h1`
-  color: white;
-  font-size: 1.8rem;
-  font-family: sans-serif;
-  text-align: center;
-  padding: 0 20px;
-  word-break: keep-all;
 `;
 
 function App() {
   return (
-    <AppBackground>
-      <AppContainer>
-        <Wrapper>
-          <Title>test</Title>
-        </Wrapper>
-      </AppContainer>
-    </AppBackground>
+    <>
+      <GlobalStyle />
+      <AppBackground>
+        <AppContainer>
+          <Outlet /> {/* 이 부분이 페이지 내용으로 교체됩니다. */}
+        </AppContainer>
+      </AppBackground>
+    </>
   );
 }
 
