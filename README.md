@@ -1,0 +1,2 @@
+# 2025_SEASONTHON_TEAM_53_FE
+[2025 kakao X groom 시즌톤] 53팀 FE
