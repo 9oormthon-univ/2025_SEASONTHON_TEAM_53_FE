@@ -1,35 +1,41 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-
 import App from './App.tsx';
-import GlobalStyle from './styles/GlobalStyle.ts';
 
-// 페이지들 import
-import LoginPage from './pages/LoginPage.tsx';
+import MainPage from './pages/MainPage.tsx';
+import KakaoCallbackPage from './pages/KakaoCallbackPage.tsx';
+import EntryPage from './pages/EntryPage.tsx';
+import SignupPage from './pages/SignUpPage.tsx';
 
 // 라우터 설정
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />, // App 컴포넌트가 공통 레이아웃 역할을 합니다.
+    element: <App />,
     children: [
-      // TODO: 나중에 홈페이지 만들면 여기에 추가
-      // { path: "", element: <HomePage /> },
-
       {
-        path: 'login', // http://.../login 경로
-        element: <LoginPage />,
+        path: '',
+        element: <EntryPage />,
       },
-      // 다른 페이지가 추가되면 여기에 계속해서 정의합니다.
-      // { path: "signup", element: <SignupPage /> },
+      {
+        path: 'main',
+        element: <MainPage />,
+      },
+      {
+        path: 'oauth/kakao/callback',
+        element: <KakaoCallbackPage />,
+      },
+      {
+        path: 'signup', // 회원가입 페이지 경로
+        element: <SignupPage />,
+      },
     ],
   },
 ]);
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
     <RouterProvider router={router} />
-    <GlobalStyle />
-  </StrictMode>
+  </React.StrictMode>
 );
