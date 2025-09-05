@@ -10,6 +10,8 @@ const GlobalStyle = createGlobalStyle`
   }
 
   body {
+    background-color: ${({ theme }) => theme.bgColor};
+    color: ${({ theme }) => theme.textColor};
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
