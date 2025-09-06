@@ -30,7 +30,6 @@ const AppContainer = styled.div<{ $backgroundStyle: string }>`
 `;
 
 const ContentWrapper = styled.div`
-  padding: 20px;
   flex: 1; // 남은 공간을 모두 차지
   overflow-y: auto; // 내용이 길어지면 스크롤
   &::-webkit-scrollbar {

@@ -3,18 +3,13 @@ import { motion } from 'framer-motion';
 
 // 카드 심볼 이미지를 import 합니다.
 import theFoolSymbol from '../assets/testcard.png';
-
-// --- 타입 정의 ---
-interface CardData {
-  name: string;
-  number: number;
-  symbolImage: string;
-}
+import type { Card } from '../data/cardData';
+import { getCardImageUrl } from '../utils/imageUtils';
 
 interface ModalProps {
   onClose: () => void;
   onConfirm: () => void; // 👈 1. onConfirm prop 타입 추가
-  cardData: CardData;
+  cardData: Card; // prop 타입을 Card로 변경
 }
 
 // --- 애니메이션 Variants ---
@@ -29,6 +24,9 @@ const modalVariants = {
 };
 
 export default function CardRevealModal({ onClose, cardData, onConfirm }: ModalProps) {
+  // 카드 이름에서 숫자 부분과 이름 부분을 분리
+  const cardName = cardData.name.split(' ').slice(1).join(' ') || '';
+
   return (
     <ModalBackdrop variants={backdropVariants} initial="hidden" animate="visible" exit="hidden" onClick={onClose}>
       <ModalContainer
@@ -38,15 +36,13 @@ export default function CardRevealModal({ onClose, cardData, onConfirm }: ModalP
         <CloseButton onClick={onClose} />
 
         <TitleSection>
-          <h1>{cardData.name}</h1>
+          <h1>{cardName}</h1>
           <p>카드가 나왔어요.</p>
         </TitleSection>
 
-        <CardView>
-          {/* <CardNumber>{cardData.number}</CardNumber> */}
-          <CardSymbol src={cardData.symbolImage} alt={cardData.name} />
-          {/* <CardName>{cardData.name}</CardName> */}
-        </CardView>
+        {/* <CardView> */}
+        <CardSymbol src={getCardImageUrl(cardData.id, cardData.card_type)} alt={cardName} />
+        {/* </CardView> */}
 
         <ActionButton onClick={onConfirm}>설명 보러 가기</ActionButton>
       </ModalContainer>
@@ -104,31 +100,26 @@ const TitleSection = styled.div`
   }
 `;
 
-const CardView = styled.div`
-  max-width: 280px;
-  max-height: 450px;
-  background-color: #1e1e1e;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  /* padding: 20px; */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-`;
+// const CardView = styled.div`
+//   width: 100%;
+//   height: 100%;
+//   background-color: #1e1e1e;
+//   border-radius: 16px;
+//   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 
-const CardNumber = styled.span`
-  align-self: flex-start;
-  font-size: 1.2rem;
-`;
+//   // 2. 이미지가 꽉 차도록 패딩 제거 및 중앙 정렬
+//   padding: 0;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+// `;
 
 const CardSymbol = styled.img`
-  width: 100%;
-  height: 100%;
-`;
-
-const CardName = styled.span`
-  font-size: 1.2rem;
+  // 3. 이미지가 CardView를 가득 채우도록 스타일 변경
+  /* width: 100%;
+  height: 100%; */
+  object-fit: cover;
+  border-radius: 16px;
 `;
 
 const ActionButton = styled.button`
