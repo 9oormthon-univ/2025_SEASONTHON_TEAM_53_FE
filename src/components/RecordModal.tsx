@@ -40,6 +40,12 @@ export default function RecordModal({ onClose, cardData }: ModalProps) {
     setIsSaving(true); // 저장 완료 상태로 변경
   };
 
+  // card_type에 따라 다른 placeholder 텍스트를 설정합니다.
+  const placeholderText =
+    cardData.card_type === 'pre'
+      ? '생각나는 간단한 내용을 적어 보세요.'
+      : '오늘 면접은 어땠나요? 너무 낙담하지 말고 당신의 강점을 다시 생각해 보세요.';
+
   // 2. handleSave 함수를 실제 API를 호출하도록 수정합니다.
   // const handleSave = async () => {
   //   if (!isButtonActive) return;
@@ -93,15 +99,20 @@ export default function RecordModal({ onClose, cardData }: ModalProps) {
                   당신은
                   <br />
                   <Highlight>"{cardData.strength}"</Highlight>
-                  <br />
-                  사람이군요!
+                  {cardData.card_type === 'pre' ? (
+                    <>
+                      <br />
+                      사람이군요!
+                    </>
+                  ) : (
+                    <>
+                      <br />
+                      사람인 걸 잊지마세요!
+                    </>
+                  )}
                 </h1>
               </TitleSection>
-              <StyledTextArea
-                placeholder="생각나는 간단한 내용을 적어 보세요."
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-              />
+              <StyledTextArea placeholder={placeholderText} value={text} onChange={(e) => setText(e.target.value)} />
               <SaveButton onClick={handleSave} disabled={!isButtonActive} $isActive={isButtonActive}>
                 저장 하기
               </SaveButton>
