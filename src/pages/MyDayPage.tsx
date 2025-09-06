@@ -360,7 +360,7 @@ export default function MyDayPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.3 }}
-                    style={{ width: '280px', filter: 'drop-shadow(0 0 25px rgba(138, 97, 240, 0.6))' }}
+                    style={{ width: '200px', filter: 'drop-shadow(0 0 25px rgba(138, 97, 240, 0.6))' }}
                   />
                 </AnimatePresence>
               ) : (
