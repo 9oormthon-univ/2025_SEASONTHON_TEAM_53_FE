@@ -1,12 +1,13 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
-import { ThemeContext } from '../styles/theme';
 import { motion, AnimatePresence } from 'framer-motion'; // framer-motion import
 import cardBeforeImage from '../assets/testcard2.png';
 import cardAfterImage from '../assets/testcard3.png';
-import theFoolSymbol from '../assets/testcard.png';
 import CardRevealModal from '../components/CardRevealModal';
 import RecordModal from '../components/RecordModal';
+import PostInterviewModal from '../components/PostInterviewModal';
+import { cardList, type Card } from '../data/cardData'; // 1. 카드 데이터와 타입 import
+import { getCardImageUrl } from '../utils/imageUtils';
 
 const PageContainer = styled.div`
   padding: 20px;
@@ -124,24 +125,28 @@ const FlippableCardContainer = styled(motion.div)`
   transform-style: preserve-3d; // 자식 요소의 3D 변환 유지
   cursor: pointer;
 `;
-
 const CardFace = styled(motion.div)`
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 16px;
   backface-visibility: hidden; // 뒷면은 보이지 않게 처리
+  /* box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); */
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 `;
 
-const CardFront = styled(CardFace)`
-  background-color: #1e1e1e;
-  /* padding: 20px; */
-  flex-direction: column;
-  justify-content: space-between;
+// 👇 2. CardFront 스타일 수정
+const CardFront = styled(CardFace)<{ $imageUrl: string }>`
+  background-image: url(${(props) => props.$imageUrl});
+  background-size: cover; /* 이미지가 카드 영역을 꽉 채우도록 */
+  background-position: center; /* 이미지를 중앙 정렬 */
+  /* background-color: rgba(0, 0, 0, 0.1); 이미지 위에 반투명 오버레이로 텍스트 가독성 높임 */
+  background-blend-mode: darken; /* 배경 이미지와 배경색을 혼합하여 어둡게 */
+  color: white; /* 텍스트 색상을 흰색으로 */
+  justify-content: space-between; /* 번호와 타이틀을 상단/하단으로 밀어냄 */
+  padding: 30px 20px;
 `;
 
 const CardBack = styled(CardFace)`
@@ -160,17 +165,16 @@ const CardBack = styled(CardFace)`
   justify-content: space-evenly;
 `;
 
+// 수정된 CardSymbol
 const CardSymbol = styled.img`
   width: 100%;
   height: 100%;
-  border-radius: 20px;
-`;
-const CardName = styled.span`
-  font-size: 1.2rem;
+  object-fit: cover; // 이미지가 비율을 유지하며 컨테이너를 꽉 채웁니다.
+  border-radius: 16px; // 부모 컨테이너의 둥근 모서리와 맞춰줍니다.
 `;
 const CardNumber = styled.span`
   align-self: flex-start;
-  font-size: 1.2rem;
+  font-size: 1.9rem;
 `;
 const CardDescription = styled.p`
   font-size: 1.2rem;
@@ -188,17 +192,6 @@ const RecordButton = styled.button`
   font-weight: bold;
 `;
 
-// 2. 기존 CardPlaceholder와 QuestionMark를 삭제하고,
-//    img 태그를 위한 TarotCardImage 컴포넌트를 새로 만듭니다.
-// 2. motion 컴포넌트로 변경하여 애니메이션을 적용합니다.
-const TarotCardImage = styled(motion.img)`
-  width: 280px;
-  height: auto;
-  border-radius: 16px;
-  filter: drop-shadow(0 0 25px rgba(138, 97, 240, 0.6));
-  position: absolute; // AnimatePresence 내에서 부드러운 교체를 위해 absolute 포지션 사용
-`;
-
 const PickCardButton = styled.button`
   width: 100%;
   padding: 16px;
@@ -209,20 +202,58 @@ const PickCardButton = styled.button`
   font-weight: bold;
 `;
 
+// Placeholder 스타일 추가
+const Placeholder = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #888;
+`;
+
 export default function MyDayPage() {
   // 1. "면접 전/후" 상태를 관리할 새로운 state 생성
   const [toggleState, setToggleState] = useState<'before' | 'after'>('before');
   const [isModalOpen, setIsModalOpen] = useState(false); // 2. 모달 표시 상태 추가
-  const { theme } = useContext(ThemeContext);
+  // const { theme } = useContext(ThemeContext);
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null); // 2. 선택된 카드를 저장할 state
 
   const [isCardPicked, setIsCardPicked] = useState(false); // 👈 카드 뽑기 완료 상태
   const [isFlipped, setIsFlipped] = useState(false); // 👈 카드 뒤집힘 상태
   const [isBubbleVisible, setIsBubbleVisible] = useState(true); // 2. 말풍선 상태 추가
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false); // 2. 기록 모달 상태 추가
+  const [isPostInterviewModalOpen, setIsPostInterviewModalOpen] = useState(false); // 2. 자소서 모달 상태 추가
+  const [postInterviewText, setPostInterviewText] = useState(''); // 3. 자소서 내용 저장 상태 추가
 
-  const handleToggle = () => setToggleState(toggleState === 'before' ? 'after' : 'before');
-  const handlePickCard = () => setIsModalOpen(true);
+  const handleToggle = () => {
+    const newState = toggleState === 'before' ? 'after' : 'before';
 
+    // 4. '면접 후'로 변경될 때 모달을 엽니다.
+    if (newState === 'after') {
+      setIsPostInterviewModalOpen(true);
+    } else {
+      setToggleState('before');
+    }
+  };
+  const handlePickCard = () => {
+    const cardType = toggleState === 'before' ? 'pre' : 'post';
+    const filteredCards = cardList.filter((card) => card.card_type === cardType);
+
+    if (filteredCards.length === 0) {
+      alert('뽑을 카드가 없습니다.');
+      return;
+    }
+
+    // 2. 랜덤으로 카드 하나를 선택합니다.
+    const randomIndex = Math.floor(Math.random() * filteredCards.length);
+    const pickedCard = filteredCards[randomIndex];
+
+    setSelectedCard(pickedCard);
+    setIsModalOpen(true);
+  };
+
+  const cardName = selectedCard?.name.split(' ').slice(1).join(' ') || '';
+  const cardNumber = selectedCard?.name.split(' ')[0] || '';
   // 모달에서 "설명 보러 가기"를 눌렀을 때 실행될 함수
   const handleCardPickConfirm = () => {
     setIsCardPicked(true);
@@ -230,13 +261,17 @@ export default function MyDayPage() {
     setIsBubbleVisible(true); // 3. 카드를 새로 뽑을 때마다 말풍선이 다시 보이도록 설정
   };
 
-  const currentCardImage = toggleState === 'before' ? cardBeforeImage : cardAfterImage;
-  const selectedCardData = {
-    name: 'The Fool',
-    number: 0,
-    symbolImage: theFoolSymbol,
-    description: '“새로운 시작과 모험을 향한 순수한 발걸음, 두려움 없는 도전의 에너지”',
+  // 5. 자소서 모달에서 제출했을 때 실행될 함수
+  const handlePostInterviewSubmit = (text: string) => {
+    setPostInterviewText(text);
+    console.log('제출된 자소서 내용:', text);
+    setIsPostInterviewModalOpen(false);
+    setToggleState('after'); // 모달이 닫힌 후 토글 상태를 변경
   };
+
+  const canShowCardUI = toggleState === 'before' || (toggleState === 'after' && postInterviewText);
+
+  const currentCardImage = cardBeforeImage;
 
   return (
     <>
@@ -246,13 +281,12 @@ export default function MyDayPage() {
             <h1>오늘의 아르카나</h1>
             <p>타로 카드를 뽑아보세요.</p>
           </TitleSection>
-          {/* 기존의 ToggleSwitch를 새로운 애니메이션 스위치로 교체 */}
-          {/* 2. 기존 스위치를 새로운 토글 스위치로 교체 */}
 
+          {/* '카드 뽑기 완료' 상태가 아닐 때만 토글 스위치를 보여줍니다. */}
           {!isCardPicked && (
             <ToggleContainer onClick={handleToggle}>
               <ToggleHandle
-                animate={{ x: toggleState === 'before' ? 0 : 62 }} // '면접 후'일 때 오른쪽으로 62px 이동
+                animate={{ x: toggleState === 'before' ? 0 : 62 }}
                 transition={{ type: 'spring', damping: 15, stiffness: 200 }}
               />
               <Label $isActive={toggleState === 'before'}>면접 전</Label>
@@ -261,77 +295,106 @@ export default function MyDayPage() {
           )}
         </Header>
 
-        <CardWrapper>
-          {isCardPicked && isBubbleVisible && (
-            <InfoBubble initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-              <span>카드를 클릭해 설명을 읽어보세요.</span>
-              {/* 5. 닫기 버튼과 onClick 이벤트 추가 */}
-              <BubbleCloseButton onClick={() => setIsBubbleVisible(false)} />
-            </InfoBubble>
-          )}
+        {/* '면접 후' 내용을 작성해야만 카드 UI가 보이도록 합니다. */}
+        {canShowCardUI ? (
+          <>
+            <CardWrapper>
+              {/* 말풍선 UI */}
+              <AnimatePresence>
+                {isCardPicked && isBubbleVisible && (
+                  <InfoBubble
+                    key="info-bubble"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                  >
+                    <span>카드를 클릭해 설명을 읽어보세요.</span>
+                    <BubbleCloseButton onClick={() => setIsBubbleVisible(false)} />
+                  </InfoBubble>
+                )}
+              </AnimatePresence>
 
-          {!isCardPicked ? (
-            // --- 카드 뽑기 전 UI ---
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentCardImage}
-                src={currentCardImage}
-                alt="타로 카드 뒷면"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-                style={{ width: '280px', filter: 'drop-shadow(0 0 25px rgba(138, 97, 240, 0.6))' }}
-              />
-            </AnimatePresence>
-          ) : (
-            // --- 카드 뽑은 후 UI (뒤집히는 카드) ---
-            <FlippableCardContainer
-              onClick={() => setIsFlipped(!isFlipped)}
-              animate={{ rotateY: isFlipped ? 180 : 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              {/* 카드 앞면 */}
-              <CardFront>
-                <CardSymbol src={selectedCardData.symbolImage} />
-              </CardFront>
-              {/* 카드 뒷면 */}
-              <CardBack>
-                <CardNumber style={{ alignSelf: 'center' }}>{selectedCardData.number}.</CardNumber>
-                <h2 style={{ fontSize: '1.8rem' }}>{selectedCardData.name}</h2>
-                <CardDescription>{selectedCardData.description}</CardDescription>
-              </CardBack>
-            </FlippableCardContainer>
-          )}
-        </CardWrapper>
+              {/* 카드 UI: 뽑기 전과 뽑은 후를 나눕니다. */}
+              {!isCardPicked ? (
+                // --- 카드 뽑기 전 UI ---
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={currentCardImage}
+                    src={currentCardImage}
+                    alt="타로 카드 뒷면"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ width: '280px', filter: 'drop-shadow(0 0 25px rgba(138, 97, 240, 0.6))' }}
+                  />
+                </AnimatePresence>
+              ) : (
+                // --- 카드 뽑은 후 UI (뒤집히는 카드) ---
+                selectedCard && ( // selectedCard 데이터가 있을 때만 렌더링
+                  <FlippableCardContainer
+                    onClick={() => setIsFlipped(!isFlipped)}
+                    animate={{ rotateY: isFlipped ? 180 : 0 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    {/* 카드 앞면 */}
+                    {/* 👇 1. 카드 앞면 JSX 수정 */}
+                    <CardFront $imageUrl={getCardImageUrl(selectedCard.id, selectedCard.card_type)} />
+                    {/* 카드 뒷면 */}
+                    <CardBack>
+                      <CardNumber style={{ alignSelf: 'center' }}>
+                        {cardNumber}. {cardName}
+                      </CardNumber>
+                      {/* <h2 style={{ fontSize: '1.8rem' }}>{cardName}</h2> */}
+                      <CardDescription>"{selectedCard.description}"</CardDescription>
+                    </CardBack>
+                  </FlippableCardContainer>
+                )
+              )}
+            </CardWrapper>
 
-        {/* 카드를 뽑은 후에는 뽑기 버튼 숨김 */}
-        {/* --- 페이지 하단 버튼 부분 수정 --- */}
-        {/* ... (Header, CardWrapper 등 기존 JSX는 동일) ... */}
-
-        {!isCardPicked ? (
-          <PickCardButton onClick={handlePickCard}>타로 카드 뽑기</PickCardButton>
-        ) : (
-          <AnimatePresence>
-            {isFlipped && (
-              <motion.div /* ... */>
-                {/* 3. onClick 이벤트에 모달을 여는 함수 연결 */}
-                <RecordButton onClick={() => setIsRecordModalOpen(true)}>기록 하러 가기</RecordButton>
-              </motion.div>
+            {/* 페이지 하단 버튼 UI */}
+            {!isCardPicked ? (
+              <PickCardButton onClick={handlePickCard}>타로 카드 뽑기</PickCardButton>
+            ) : (
+              <AnimatePresence>
+                {isFlipped && (
+                  <motion.div
+                    key="record-button"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ width: '100%', maxWidth: '380px', margin: '0 auto' }}
+                  >
+                    <RecordButton onClick={() => setIsRecordModalOpen(true)}>기록 하러 가기</RecordButton>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             )}
-          </AnimatePresence>
+          </>
+        ) : (
+          <Placeholder>
+            <p>'면접 후' 내용을 먼저 작성해주세요.</p>
+          </Placeholder>
         )}
       </PageContainer>
 
+      {/* 전체 화면을 덮는 모달들을 여기에 모아둡니다. */}
       <AnimatePresence>
-        {isModalOpen && (
+        {isModalOpen && selectedCard && (
           <CardRevealModal
             onClose={() => setIsModalOpen(false)}
             onConfirm={handleCardPickConfirm}
-            cardData={selectedCardData}
+            cardData={selectedCard}
           />
         )}
-        {isRecordModalOpen && <RecordModal onClose={() => setIsRecordModalOpen(false)} />}
+        {isRecordModalOpen && selectedCard && (
+          <RecordModal onClose={() => setIsRecordModalOpen(false)} cardData={selectedCard} />
+        )}
+        {isPostInterviewModalOpen && (
+          <PostInterviewModal onClose={() => setIsPostInterviewModalOpen(false)} onSubmit={handlePostInterviewSubmit} />
+        )}
       </AnimatePresence>
     </>
   );

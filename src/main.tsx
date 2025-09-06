@@ -8,6 +8,8 @@ import KakaoCallbackPage from './pages/KakaoCallbackPage.tsx';
 import EntryPage from './pages/EntryPage.tsx';
 import SignupPage from './pages/SignUpPage.tsx';
 import MyDayPage from './pages/MyDayPage.tsx';
+import ArchivePage from './pages/ArchievePage.tsx';
+import ArchiveDetailPage from './pages/ArchieveDetailPage.tsx';
 
 // 라우터 설정
 const router = createBrowserRouter([
@@ -29,7 +31,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'archive', // '모아보기' 페이지 경로 (나중에 만들 페이지)
-        element: <div>모아보기 페이지</div>, // 임시 컴포넌트
+        element: <ArchivePage />, // 임시 컴포넌트
       },
       {
         path: 'oauth/kakao/callback',
@@ -38,6 +40,10 @@ const router = createBrowserRouter([
       {
         path: 'signup', // 회원가입 페이지 경로
         element: <SignupPage />,
+      },
+      {
+        path: 'archive/:cardName',
+        element: <ArchiveDetailPage />,
       },
     ],
   },

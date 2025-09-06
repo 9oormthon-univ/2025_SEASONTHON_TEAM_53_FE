@@ -96,7 +96,7 @@ export default function LoginPage() {
       </TopArea>
 
       <ButtonArea>
-        <EmailLoginButton onClick={handleEmailLogin}>이메일로 시작하기</EmailLoginButton>
+        <EmailLoginButton onClick={handleEmailLogin}>로그인 하기</EmailLoginButton>
         <KakaoLoginButton onClick={handleKakaoLogin}>카카오로 시작하기</KakaoLoginButton>
       </ButtonArea>
 
