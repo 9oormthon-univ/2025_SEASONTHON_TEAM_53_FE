@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import checkIcon from '../assets/confirm_icon.svg';
 import { type Card } from '../data/cardData';
+import { apiClient } from '../api/client';
 
 interface ModalProps {
   onClose: () => void;
@@ -38,6 +39,30 @@ export default function RecordModal({ onClose, cardData }: ModalProps) {
 
     setIsSaving(true); // 저장 완료 상태로 변경
   };
+
+  // 2. handleSave 함수를 실제 API를 호출하도록 수정합니다.
+  // const handleSave = async () => {
+  //   if (!isButtonActive) return;
+
+  //   // API 요청에 보낼 데이터 (payload) 구성
+  //   const payload = {
+  //     cardId: cardData.id,
+  //     cardType: cardData.card_type.toUpperCase(), // 'pre' -> 'PRE'
+  //     text: text,
+  //   };
+
+  //   try {
+  //     console.log('서버로 내용 전송:', payload);
+  //     // '/card/save' 엔드포인트로 POST 요청
+  //     await apiClient.post('/card/save', payload);
+
+  //     // 성공적으로 저장되면 완료 화면으로 전환
+  //     setIsSaving(true);
+  //   } catch (error) {
+  //     console.error('기록 저장 API 연동 실패:', error);
+  //     alert('기록을 저장하는 데 실패했습니다. 다시 시도해주세요.');
+  //   }
+  // };
 
   return (
     <ModalBackdrop variants={backdropVariants} initial="hidden" animate="visible" exit="hidden" onClick={onClose}>

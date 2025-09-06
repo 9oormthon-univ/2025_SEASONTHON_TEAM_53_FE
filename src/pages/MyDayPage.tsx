@@ -2,12 +2,17 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion'; // framer-motion import
 import cardBeforeImage from '../assets/testcard2.png';
-import cardAfterImage from '../assets/testcard3.png';
 import CardRevealModal from '../components/CardRevealModal';
 import RecordModal from '../components/RecordModal';
 import PostInterviewModal from '../components/PostInterviewModal';
 import { cardList, type Card } from '../data/cardData'; // 1. 카드 데이터와 타입 import
 import { getCardImageUrl } from '../utils/imageUtils';
+
+// 👇 2. API 응답 타입을 정의합니다.
+interface DrawnCardResponse {
+  id: number;
+  name: string;
+}
 
 const PageContainer = styled.div`
   padding: 20px;
@@ -160,18 +165,9 @@ const CardBack = styled(CardFace)`
     color: white;
     font-weight: 300;
   }
-
-  // 1. 버튼이 빠졌으므로 콘텐츠 정렬을 space-around로 변경
   justify-content: space-evenly;
 `;
 
-// 수정된 CardSymbol
-const CardSymbol = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover; // 이미지가 비율을 유지하며 컨테이너를 꽉 채웁니다.
-  border-radius: 16px; // 부모 컨테이너의 둥근 모서리와 맞춰줍니다.
-`;
 const CardNumber = styled.span`
   align-self: flex-start;
   font-size: 1.9rem;
@@ -251,6 +247,44 @@ export default function MyDayPage() {
     setSelectedCard(pickedCard);
     setIsModalOpen(true);
   };
+  // 서버와 api 연동 위한 카드 뽑기 api
+  //   // 👇 3. handlePickCard 함수를 async 함수로 변경하고 API 호출 로직을 추가합니다.
+  // const handlePickCard = async () => {
+  //   // 'before' 상태면 'PRE', 'after' 상태면 'POST'
+  //   const cardType = toggleState === 'before' ? 'PRE' : 'POST';
+
+  //   try {
+  //     // API에 POST 요청을 보냅니다.
+  //     const response = await apiClient.post<DrawnCardResponse>('/card/draw', {
+  //       cardType: cardType,
+  //     });
+
+  //     const drawnCard = response.data; // { id: 0, name: "0 The Fool" }
+  //     console.log('백엔드에서 뽑은 카드:', drawnCard);
+
+  //     // --- 중요 ---
+  //     // 백엔드에서 받은 id를 이용해 프론트엔드의 전체 카드 데이터(cardList)에서
+  //     // 일치하는 카드를 찾습니다. (description, question 등을 사용하기 위함)
+  //     const fullCardData = cardList.find(card => card.id === drawnCard.id);
+
+  //     if (fullCardData) {
+  //       setSelectedCard(fullCardData);
+  //       setIsModalOpen(true); // 카드 공개 모달을 띄웁니다.
+  //     } else {
+  //       // 일치하는 카드가 프론트엔드 데이터에 없는 경우 에러 처리
+  //       alert('알 수 없는 카드를 받았습니다. 데이터를 확인해주세요.');
+  //     }
+  //   } catch (error) {
+  //     console.error('카드 뽑기 API 연동 실패:', error);
+  //     alert('카드를 뽑는 데 실패했습니다. 다시 시도해주세요.');
+  //   }
+  // };
+
+  // const handleCardPickConfirm = () => {
+  //   setIsCardPicked(true);
+  //   setIsModalOpen(false);
+  //   setIsBubbleVisible(true);
+  // };
 
   const cardName = selectedCard?.name.split(' ').slice(1).join(' ') || '';
   const cardNumber = selectedCard?.name.split(' ')[0] || '';
